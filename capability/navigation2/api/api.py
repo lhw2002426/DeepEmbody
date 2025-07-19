@@ -67,7 +67,12 @@ nv_controller = NavWithUltrasonicSafety()
 
 @eaios.api
 def nv_test():
-    pass
+    import time
+    if int(time.time())%2 == 0:
+        func = eaios.get_plugin("navigation2","ros2_navigation")
+    else:
+        func = eaios.get_plugin("navigation2","simple_navigation")
+    func()
 
 @eaios.api
 def set_goal(x, y, yaw) -> str:
