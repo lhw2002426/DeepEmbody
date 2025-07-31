@@ -81,6 +81,7 @@ def check_depend(config_path):
     print("[SUCCESS] All features and dependencies validated.")
     return feature_set, all_dependencies
 
+# Example usage
 if __name__ == "__main__":
 
     config_path = os.path.join(BASE_PATH, "config", "include.yml")

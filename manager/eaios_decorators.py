@@ -284,9 +284,10 @@ async def mcp_start():
     loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, eaios.mcp.run, "sse")
 
+# Example usage
 if __name__ == "__main__":
     import yaml
-    package_init("config/include.yml")
+    package_init("config/include/ranger_test.yml")
     with open("test.txt","w") as f:
         import time
         f.write(str(time.time()))
