@@ -8,8 +8,7 @@ try:
 except ImportError:
     print("Warning: s_detect_objs skill not found. s_update_map will not work properly.")
 
-@eaios.api
-@eaios.caller
+@eaios.skill
 def s_update_map() -> bool:
     """
     当前视角下,识别所有物体,加入语义地图
@@ -42,8 +41,7 @@ def s_update_map() -> bool:
         print(f"Error in s_update_map: {e}")
         return False
 
-@eaios.api
-@eaios.caller
+@eaios.skill
 def s_query_map_all() -> Dict[str, Tuple[float, float, float]]:
     """
     查询语义地图所有物体
@@ -60,8 +58,7 @@ def s_query_map_all() -> Dict[str, Tuple[float, float, float]]:
         print(f"Error in s_query_map_all: {e}")
         return {}
 
-@eaios.api
-@eaios.caller
+@eaios.skill
 def s_query_map(obj_name: str) -> Optional[Tuple[float, float, float]]:
     """
     查询语义地图指定物体
@@ -84,8 +81,7 @@ def s_query_map(obj_name: str) -> Optional[Tuple[float, float, float]]:
         print(f"Error in s_query_map: {e}")
         return None
 
-@eaios.api
-@eaios.caller
+@eaios.skill
 def s_add_map_obj(obj_name: str, coordinates: Tuple[float, float, float]) -> bool:
     """
     手动向语义地图中增加物体

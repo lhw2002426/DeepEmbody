@@ -50,8 +50,7 @@ def put_text_with_background(img, text, position, font_scale=0.6, thickness=2, b
     # Draw text
     cv2.putText(img, text, (x, y), font, font_scale, text_color, thickness)
 
-@eaios.api
-@eaios.caller
+@eaios.skill
 def s_detect_objs(camera_name: str) -> dict:
     # this is used for simulation environment
     try:
