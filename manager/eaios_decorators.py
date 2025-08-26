@@ -123,6 +123,39 @@ def inject_skill_functions(func):
     
     return func
 
+def flush_plugin(config_path,func_dict,cap_name = None):
+    # 读取配置文件
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"配置文件不存在: {config_path}")
+        
+    with open(config_path, 'r') as f:
+        config_dict = yaml.safe_load(f)
+    
+    # 检查配置中是否存在对应的cap和name
+    if cap_name is not None and cap_name not in config_dict:
+        raise KeyError(f"在配置文件中未找到 {cap_name}")
+    
+    for cap in config_dict.keys():
+        #如果指定了要导入的名称,则只处理要导入的cap
+        if cap_name is not None and cap != cap_name:
+            continue
+        # 获取模块路径
+        module_path = config_dict[cap]
+        module_path = os.path.join(module_path, "lib.py")
+        # 构建完整路径
+        full_path = os.path.join(BASE_PATH, "capability", cap, "plugins", module_path)
+        if not os.path.exists(full_path):
+            raise FileNotFoundError(f"模块文件不存在: {full_path}")
+        
+        # 动态导入模块
+        module_name = f"capability.{cap}.{os.path.splitext(module_path)[0]}"
+        spec = importlib.util.spec_from_file_location(module_name, full_path)
+        if spec is None:
+            raise ImportError(f"无法创建模块规范: {module_name}")
+            
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
 
 class eaios:
     mcp = FastMCP(
@@ -153,17 +186,46 @@ class eaios:
             return func
         return decorator
 
-    def get_plugin(cap,name,func_name = None):
+    def get_plugin(cap, name, func_name=None):
+        """获取指定功能的插件
+        
+        Args:
+            cap: 能力类别
+            name: 插件名称
+            func_name: 函数名称，如果为None则自动获取调用者函数名
+            
+        Returns:
+            注册的插件函数
+            
+        Raises:
+            KeyError: 当插件未找到时
+            ImportError: 当导入模块失败时
+            Exception: 其他可能的错误
+        """
         if func_name == None:
             current = inspect.currentframe()
             caller = current.f_back
             func_name = caller.f_code.co_name if caller else None
 
-        plugin_name = cap + ":" + name + ":" + func_name
-        # auto raise KeyError
-        # if plugin_name not in eaios.FUNCTION_REGISTRY.keys():
-        #     raise 
-        return eaios.FUNCTION_REGISTRY[plugin_name]
+        plugin_name = f"{cap}:{name}:{func_name}"
+        
+        # 如果插件已存在，直接返回
+        if plugin_name in eaios.FUNCTION_REGISTRY.keys():
+            return eaios.FUNCTION_REGISTRY[plugin_name]
+        
+        # 插件不存在，尝试从配置文件加载
+        try:
+            config_path = os.path.join(BASE_PATH,"config/plugins.yml")
+            flush_plugin(config_path,eaios.FUNCTION_REGISTRY,cap)
+            # 检查模块是否成功注册了函数
+            if plugin_name not in eaios.FUNCTION_REGISTRY.keys():
+                raise KeyError(f"模块导入成功但未注册函数: {plugin_name}")
+                
+            return eaios.FUNCTION_REGISTRY[plugin_name]
+            
+        except Exception as e:
+            # 重新抛出异常，添加更多上下文信息
+            raise type(e)(f"加载插件 {plugin_name} 失败: {str(e)}") from e
 
     @staticmethod
     def finalize():
